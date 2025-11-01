@@ -17,6 +17,7 @@ import {
 import { Heart, MessageCircle, Edit2, Calendar, User, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiRequest } from '../lib/api';
+import { getAvailableAvatars, resolveAvatarUrl } from '../lib/utils';
 import { useUser } from "@/hooks/useUser";
 
 const ProfilePage = ({ user, onLogout }) => {
@@ -31,6 +32,7 @@ const ProfilePage = ({ user, onLogout }) => {
   });
   const [errors, setErrors] = useState({});
   const [previewImage, setPreviewImage] = useState(null);
+  const [avatars, setAvatars] = useState([]);
   const { setUser } = useUser();
 
 
@@ -38,6 +40,11 @@ const ProfilePage = ({ user, onLogout }) => {
     loadProfile();
     loadPosts();
   }, [user.id, user.name]);
+
+  useEffect(() => {
+    // Load available local avatars from src/pfp
+    setAvatars(getAvailableAvatars());
+  }, []);
 
   const loadProfile = async () => {
     try {
@@ -121,6 +128,11 @@ const ProfilePage = ({ user, onLogout }) => {
     setPreviewImage(null);
   };
 
+  const handleChooseAvatar = (avatarPath) => {
+    setEditForm({ ...editForm, profilePicture: avatarPath });
+    setPreviewImage(avatarPath);
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -144,10 +156,13 @@ const ProfilePage = ({ user, onLogout }) => {
   
     try {
       const token = localStorage.getItem('sharespace_token');
+      // If no explicit selection, keep existing or fallback to a default local avatar
+      const defaultAvatar = avatars[0]?.path || '/pfp/cat.png';
+      const selectedAvatar = editForm.profilePicture || profile.profilePicture || defaultAvatar;
       const payload = {
         name: editForm.name.trim(),
         bio: editForm.bio.trim() || 'A member of the ShareSpace community 🌟',
-        profilePictureUrl: editForm.profilePicture,
+        profilePictureUrl: selectedAvatar,
       };
   
       console.log('Updating profile payload', payload);
@@ -223,7 +238,7 @@ const ProfilePage = ({ user, onLogout }) => {
               <div className="flex items-center space-x-4">
                 {profile.profilePicture ? (
                   <img 
-                    src={profile.profilePicture} 
+                    src={resolveAvatarUrl(profile.profilePicture) || profile.profilePicture}
                     alt={profile.name}
                     className="w-20 h-20 rounded-full object-cover shadow-lg ring-4 ring-green-100"
                   />
@@ -359,46 +374,70 @@ const ProfilePage = ({ user, onLogout }) => {
               <Label htmlFor="profilePicture" className="text-gray-700 font-semibold">
                 Profile Picture
               </Label>
-              <div className="flex items-center space-x-4">
-                {previewImage ? (
-                  <div className="relative">
-                    <img 
-                      src={previewImage} 
-                      alt="Preview"
-                      className="w-20 h-20 rounded-full object-cover shadow-lg ring-4 ring-green-100"
-                    />
-                    <button
-                      onClick={handleRemoveImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md"
-                      type="button"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                    <User size={40} className="text-white" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <label
-                    htmlFor="imageUpload"
-                    className="cursor-pointer inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:from-green-600 hover:to-green-700 transition-colors shadow-md"
-                  >
-                    <Upload size={16} className="mr-2" />
-                    Upload Image
-                  </label>
-                  <input
-                    id="imageUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
-                  {errors.image && (
-                    <p className="text-xs text-red-500 mt-1">{errors.image}</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                  {avatars.map((a) => {
+                    const selected = (editForm.profilePicture || '') === a.path;
+                    return (
+                      <button
+                        key={a.path}
+                        type="button"
+                        onClick={() => handleChooseAvatar(a.path)}
+                        className={`relative w-20 h-20 rounded-full overflow-hidden border-2 ${selected ? 'border-green-500' : 'border-transparent'} transition-transform duration-200 hover:scale-105 focus:outline-none`}
+                        aria-label={`Choose avatar ${a.fileName}`}
+                      >
+                        <img
+                          src={a.url}
+                          alt={a.fileName}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                        {/* Selected label removed; border indicates selection */}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  {(previewImage || editForm.profilePicture) ? (
+                    <div className="relative">
+                      <img 
+                        src={resolveAvatarUrl(previewImage || editForm.profilePicture) || previewImage || editForm.profilePicture}
+                        alt="Preview"
+                        className="w-20 h-20 rounded-full object-cover shadow-lg ring-4 ring-green-100"
+                      />
+                      <button
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md"
+                        type="button"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                      <User size={40} className="text-white" />
+                    </div>
                   )}
+                  <div className="flex-1">
+                    <label
+                      htmlFor="imageUpload"
+                      className="cursor-pointer inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:from-green-600 hover:to-green-700 transition-colors shadow-md"
+                    >
+                      <Upload size={16} className="mr-2" />
+                      Upload Image
+                    </label>
+                    <input
+                      id="imageUpload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
+                    {errors.image && (
+                      <p className="text-xs text-red-500 mt-1">{errors.image}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

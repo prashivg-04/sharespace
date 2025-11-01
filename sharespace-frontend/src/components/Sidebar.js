@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Heart, Home, MessageCircle, BookOpen, TrendingUp, Library, Wind, LogOut, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser } from "@/hooks/useUser";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -137,7 +138,7 @@ const Sidebar = ({ onLogout }) => {
             <div className="flex items-center space-x-3 w-full">
               <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border-2 border-white shadow-sm flex-shrink-0">
                 {user?.profilePictureUrl ? (
-                  <AvatarImage src={user?.profilePictureUrl} alt={user?.name || 'User'} />
+                  <AvatarImage src={resolveAvatarUrl(user?.profilePictureUrl) || user?.profilePictureUrl} alt={user?.name || 'User'} />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-green-400 to-blue-500 text-white text-xs sm:text-sm font-semibold">
                     {(user?.name || 'U')
