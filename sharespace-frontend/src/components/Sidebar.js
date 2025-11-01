@@ -31,7 +31,7 @@ const Sidebar = ({ onLogout }) => {
             imageDataUrl: savedUser.profilePictureUrl || null,
           });
         } else {
-          setProfileData({ name: user.name, imageDataUrl: null });
+          setProfileData({ name: user?.name || 'User', imageDataUrl: null });
         }
       } catch (err) {
         console.warn("Error loading user from localStorage", err);
@@ -47,7 +47,7 @@ const Sidebar = ({ onLogout }) => {
     window.addEventListener('storage', onStorageChange);
   
     return () => window.removeEventListener('storage', onStorageChange);
-  }, [user.name]);
+  }, [user?.name]);
   
 
   useEffect(() => {
