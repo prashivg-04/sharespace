@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Wind, Play, Pause } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Tabs, TabsContent } from '../components/ui/tabs';
 import AmbientSounds from '@/components/CalmTools/AmbientSounds';
 
 const CalmToolsPage = ({ user, onLogout }) => {
@@ -75,6 +75,8 @@ const CalmToolsPage = ({ user, onLogout }) => {
     };
   }, []);
 
+  const [activeTab, setActiveTab] = useState('breathing');
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
       <Sidebar user={user} onLogout={onLogout} />
@@ -94,11 +96,50 @@ const CalmToolsPage = ({ user, onLogout }) => {
             </div>
           </Card>
 
-          <Tabs defaultValue="breathing" className="space-y-6">
-            <TabsList className="bg-white/70 backdrop-blur-sm">
-              <TabsTrigger value="breathing" data-testid="tab-breathing">Breathing Exercises</TabsTrigger>
-              <TabsTrigger value="sounds" data-testid="tab-sounds">Ambient Sounds</TabsTrigger>
-            </TabsList>
+          {/* Prominent feature cards for section toggles */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('breathing')}
+              className={`text-left ${activeTab === 'breathing' ? '' : ''}`}
+              aria-pressed={activeTab === 'breathing'}
+              data-testid="card-breathing"
+            >
+              <Card className={`p-6 sm:p-8 bg-white/70 backdrop-blur-sm border-none shadow-lg hover:shadow-xl transition-all ${activeTab === 'breathing' ? 'ring-2 ring-blue-300' : ''}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+                    <span className="text-3xl sm:text-4xl" role="img" aria-label="breathing">🌬</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-semibold text-gray-800">Breathing Exercises</h3>
+                    <p className="text-gray-600 text-sm sm:text-base">Practice calm breathing</p>
+                  </div>
+                </div>
+              </Card>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('sounds')}
+              className={`text-left ${activeTab === 'sounds' ? '' : ''}`}
+              aria-pressed={activeTab === 'sounds'}
+              data-testid="card-sounds"
+            >
+              <Card className={`p-6 sm:p-8 bg-white/70 backdrop-blur-sm border-none shadow-lg hover:shadow-xl transition-all ${activeTab === 'sounds' ? 'ring-2 ring-green-300' : ''}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center">
+                    <span className="text-3xl sm:text-4xl" role="img" aria-label="ambient sounds">🎧</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-semibold text-gray-800">Ambient Sounds</h3>
+                    <p className="text-gray-600 text-sm sm:text-base">Listen to relaxing sounds</p>
+                  </div>
+                </div>
+              </Card>
+            </button>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
 
             <TabsContent value="breathing" className="space-y-6">
               {/* Breathing Visualizer */}
